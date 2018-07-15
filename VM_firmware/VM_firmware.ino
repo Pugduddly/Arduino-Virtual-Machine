@@ -486,11 +486,11 @@ void setup(){
         case 31:
           // sero ||||| top of stack is sent via uart
           VM[n].ip++;
-          Serial.print("VM");
-          Serial.print(n);
-          Serial.print(VM[n].stack[VM[n].sp]);
-          VM[n].stack[VM[n].sp] = 0;
-          VM[n].sp--;
+          //Serial.print("VM");
+          //Serial.print(n);
+          Serial.write(VM[n].stack[VM[n].sp]);
+          //VM[n].stack[VM[n].sp] = 0;
+          //VM[n].sp--;
           break;
           
         case 32:
@@ -509,18 +509,26 @@ void setup(){
           break;
           
         case 34:
-          // pushc ||||| Push the top of stack into top of common memory
+          /*// pushc ||||| Push the top of stack into top of common memory
           VM[n].ip++;
           com_mem_p++;
-          com_mem[com_mem_p] = VM[n].stack[VM[n].sp];
+          com_mem[com_mem_p] = VM[n].stack[VM[n].sp];*/
+          // stc ||||| Store top of stack to location specified by argument
+          com_mem[VM[n].prog_mem[VM[n].ip + 1]] = VM[n].stack[VM[n].sp];
+          VM[n].ip += 2;
+          //VM[n].sp --;
           break;
           
         case 35:
-          // popc ||||| Pop the top of common memory to the top of stack
+          /*// popc ||||| Pop the top of common memory to the top of stack
           VM[n].ip++;
           VM[n].sp++;
           VM[n].stack[VM[n].sp] = com_mem[com_mem_p];
-          com_mem_p--;
+          com_mem_p--;*/
+          // ldc ||||| Push value at location specified by argument to stack
+          VM[n].sp ++;
+          VM[n].stack[VM[n].sp] = com_mem[VM[n].prog_mem[VM[n].ip + 1]];
+          VM[n].ip += 2;
           break;
           
         case 36:

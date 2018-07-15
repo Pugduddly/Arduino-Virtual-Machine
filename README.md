@@ -40,6 +40,6 @@ A parallel Virtual Stack Machine Firmware for Arduino
 | 31     | SERO     | Write value at top of stack to UART                                   |
 | 32     | PUSH     | Push argument `A` to the stack                                        |
 | 33     | OPR      | output ready; used only if multiple VMs are running one after another |
-| 34     | PUSHC    | Push top of stack to top of common memory                             |
-| 35     | POPC     | Pop top of common memory to the stack                                 |
+| 34     | STC      | Store top of stack to location specified by argument                  |
+| 35     | LDC      | Push value at location specified by argument to stack                 |
 | 36     | WOPR     | Wait for VM specified by argument `A` to have output ready            |
