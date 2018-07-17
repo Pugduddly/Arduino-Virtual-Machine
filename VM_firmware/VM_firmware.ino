@@ -67,7 +67,7 @@ void setup(){
    // Program VM
    init_prog(N);
    
-   Serial.print("Beginning execution in 1 second");
+   Serial.println("Beginning execution in 1 second\n");
    delay(1000);
 }                              // setup completed
 
@@ -109,16 +109,21 @@ void setup(){
 
  // prints all the parameters of the VM
  void debug(byte n){
-   Serial.println("\n Instruction Pointer : ");
+   Serial.print("Instruction Pointer : ");
    Serial.println(VM[n].ip);
-   Serial.println("\n Stack Pointer : ");
+   Serial.print("Stack Pointer       : ");
    Serial.println(VM[n].sp);
-   Serial.println("\n Top of Stack : ");
+   Serial.print("Top of Stack        : ");
    Serial.println(VM[n].stack[VM[n].sp]);
-   Serial.println("\n Output Ready Flag : ");
+   Serial.print("Output Ready Flag   : ");
    Serial.println(VM[n].op_ready);
-   Serial.println("\n Execution Done Flag : ");
+   Serial.print("Execution Done Flag : ");
    Serial.println(VM[n].done);
+   for (int i = 0; i <= VM[n].sp; i ++) {
+     Serial.print(i);
+     Serial.print(": ");
+     Serial.println(VM[n].stack[i]);
+   }
  }
  
  // initialize the VMs
@@ -161,7 +166,7 @@ void setup(){
    }
    if (n <= N){
      Serial.println("Enter opcodes ");
-     while(temp != 255){
+     while(count < ROM_SIZE){
       if (Serial.available() > 0) {
         temp = Serial.read();
         VM[n-1].prog_mem[count] = temp;
@@ -178,7 +183,8 @@ void setup(){
  
  void init_prog(byte n){
    Serial.println("Program VM1");
-   while(temp != 255){
+   count = 0;
+   while(count < ROM_SIZE){
       if (Serial.available() > 0) {
         temp = Serial.read();
         VM[0].prog_mem[count] = temp;
@@ -187,8 +193,9 @@ void setup(){
     }
     if(n > 1){
       temp = 0;
+      count = 0;
       Serial.println("Program VM2");
-      while(temp != 255){
+      while(count < ROM_SIZE){
         if (Serial.available() > 0) {
           temp = Serial.read();
           VM[1].prog_mem[count] = temp;
@@ -232,7 +239,7 @@ void setup(){
        case 3:
          // jmpf A ||||| ip = ip + A (relative jump) forward jump only
          VM[n].ip++;
-         VM[n].ip = VM[n].ip + ((VM[n].prog_mem[VM[n].ip] * 100) + (VM[n].prog_mem[VM[n].ip + 1]));
+         VM[n].ip = VM[n].ip + ((VM[n].prog_mem[VM[n].ip] << 8) + (VM[n].prog_mem[VM[n].ip + 1]));
          VM[n].ip++;
          VM[n].ip++;
          break;
@@ -240,7 +247,7 @@ void setup(){
        case 4:
          // jmpb A ||||| ip = ip - A (relative jump) backward jump only
          VM[n].ip++;
-         VM[n].ip = VM[n].ip - ((VM[n].prog_mem[VM[n].ip] * 100) + (VM[n].prog_mem[VM[n].ip + 1]));
+         VM[n].ip = VM[n].ip - ((VM[n].prog_mem[VM[n].ip] << 8) + (VM[n].prog_mem[VM[n].ip + 1]));
          VM[n].ip++;
          VM[n].ip++;
          break;
@@ -249,7 +256,7 @@ void setup(){
          // jfz ||||| if top of stack is 0, ip = ip + A (forward jump)
          VM[n].ip++;
          if(VM[n].stack[VM[n].sp] == 0){
-           VM[n].ip = VM[n].ip + ((VM[n].prog_mem[VM[n].ip] * 100) + (VM[n].prog_mem[VM[n].ip + 1]));
+           VM[n].ip = VM[n].ip + ((VM[n].prog_mem[VM[n].ip] << 8) + (VM[n].prog_mem[VM[n].ip + 1]));
            VM[n].ip++;
            VM[n].ip++;
          }
@@ -263,7 +270,7 @@ void setup(){
          // jbz ||||| if top of stack is 0, ip = ip - A (backward jump)
          VM[n].ip++;
          if(VM[n].stack[VM[n].sp] == 0){
-           VM[n].ip = VM[n].ip - ((VM[n].prog_mem[VM[n].ip] * 100) + (VM[n].prog_mem[VM[n].ip + 1]));
+           VM[n].ip = VM[n].ip - ((VM[n].prog_mem[VM[n].ip] << 8) + (VM[n].prog_mem[VM[n].ip + 1]));
            VM[n].ip++;
            VM[n].ip++;
          }
@@ -277,7 +284,7 @@ void setup(){
          // jfnz ||||| if top of stack not 0, ip = ip + A (forward jump)
          VM[n].ip++;
          if (VM[n].stack[VM[n].sp] != 0){
-           VM[n].ip = VM[n].ip + ((VM[n].prog_mem[VM[n].ip] * 100) + (VM[n].prog_mem[VM[n].ip + 1]));
+           VM[n].ip = VM[n].ip + ((VM[n].prog_mem[VM[n].ip] << 8) + (VM[n].prog_mem[VM[n].ip + 1]));
            VM[n].ip++;
            VM[n].ip++;
          }
@@ -291,7 +298,7 @@ void setup(){
          // jbnz ||||| if top of stack not 0, ip = ip - A (backward jump)
          VM[n].ip++;
          if (VM[n].stack[VM[n].sp] != 0){
-           VM[n].ip = VM[n].ip - ((VM[n].prog_mem[VM[n].ip] * 100) + (VM[n].prog_mem[VM[n].ip + 1]));
+           VM[n].ip = VM[n].ip - ((VM[n].prog_mem[VM[n].ip] << 8) + (VM[n].prog_mem[VM[n].ip + 1]));
            VM[n].ip++;
            VM[n].ip++;
          }
@@ -466,18 +473,21 @@ void setup(){
         case 28:
           //rs ||||| right shift the top of stack
           VM[n].ip++;
-          VM[n].stack[VM[n].sp] >> 1;
+          VM[n].stack[VM[n].sp] = VM[n].stack[VM[n].sp] >> 1;
           break;
         
         case 29:
           // ls ||||| left shift the top of stack
           VM[n].ip++;
-          VM[n].stack[VM[n].sp] << 1;
+          VM[n].stack[VM[n].sp] = VM[n].stack[VM[n].sp] << 1;
           break;
         
         case 30:
           // ed ||||| execution done
           VM[n].done = 1;
+          Serial.print("\nVM");
+          Serial.print(n + 1);
+          Serial.println(" finished execution");
           debug(n);
           VM[n].ip = n;
           VM[n].sp = n;
@@ -488,17 +498,18 @@ void setup(){
           VM[n].ip++;
           //Serial.print("VM");
           //Serial.print(n);
+          //Serial.print(": ");
+          //Serial.println(VM[n].stack[VM[n].sp]);
           Serial.write(VM[n].stack[VM[n].sp]);
           //VM[n].stack[VM[n].sp] = 0;
           //VM[n].sp--;
           break;
           
         case 32:
-          // put A |||| put A to the top of stack
+          // push A |||| push A to the top of stack
           VM[n].ip++;
           VM[n].sp++;
-          VM[n].stack[VM[n].sp] = (VM[n].prog_mem[VM[n].ip] * 100) + VM[n].prog_mem[VM[n].ip + 1];
-          VM[n].ip++;
+          VM[n].stack[VM[n].sp] = VM[n].prog_mem[VM[n].ip];
           VM[n].ip++;
           break;
           
@@ -526,9 +537,10 @@ void setup(){
           VM[n].stack[VM[n].sp] = com_mem[com_mem_p];
           com_mem_p--;*/
           // ldc ||||| Push value at location specified by argument to stack
+          VM[n].ip ++;
           VM[n].sp ++;
-          VM[n].stack[VM[n].sp] = com_mem[VM[n].prog_mem[VM[n].ip + 1]];
-          VM[n].ip += 2;
+          VM[n].stack[VM[n].sp] = com_mem[VM[n].prog_mem[VM[n].ip]];
+          VM[n].ip ++;
           break;
           
         case 36:
@@ -541,12 +553,72 @@ void setup(){
           else 
             Serial.println("Waiting");
           break;
-          
-        default:
-          Serial.println(VM[n].prog_mem[VM[n].ip]);
-          Serial.println(" Error in OPCODE ");
-          Serial.println(" All VMs aborted");
-          debug(n);
-          while(1){}
+
+        case 37:
+          // ldcr ||||| Load value from location specified by top of stack
+          VM[n].sp ++;
+          VM[n].stack[VM[n].sp] = com_mem[VM[n].stack[VM[n].sp - 1]];
+          VM[n].ip ++;
+          break;
+
+        case 38:
+          // stcr ||||| Store top of stack from location specified by second of stack
+          com_mem[VM[n].stack[VM[n].sp - 1]] = VM[n].stack[VM[n].sp];
+          VM[n].ip ++;
+          break;
+
+        case 39:
+         // jmp A ||||| jump to location A (two bytes)
+         VM[n].ip ++;
+         VM[n].ip = ((VM[n].prog_mem[VM[n].ip] << 8) + (VM[n].prog_mem[VM[n].ip + 1]));
+         break;
+       
+       case 40:
+         // jz A ||||| if top of stack is 0, jump to location A (two bytes)
+         VM[n].ip ++;
+         if (VM[n].stack[VM[n].sp] == 0) {
+           VM[n].ip = ((VM[n].prog_mem[VM[n].ip] << 8) + (VM[n].prog_mem[VM[n].ip + 1]));
+         } else {
+           VM[n].ip ++;
+           VM[n].ip ++;
+         }
+         break;
+       
+       case 41:
+         // jnz A ||||| if top of stack not 0, jump to location A (two bytes)
+         VM[n].ip ++;
+         if (VM[n].stack[VM[n].sp] != 0) {
+           VM[n].ip = ((VM[n].prog_mem[VM[n].ip] << 8) + (VM[n].prog_mem[VM[n].ip + 1]));
+         } else {
+           VM[n].ip ++;
+           VM[n].ip ++;
+         }
+         break;
+
+       case 42:
+         // call A ||||| push instruction pointer to stack, then jump to location A (two bytes)
+         VM[n].ip ++;
+         VM[n].sp ++;
+         VM[n].stack[VM[n].sp] = (VM[n].ip + 2) >> 8;
+         VM[n].sp ++;
+         VM[n].stack[VM[n].sp] = (VM[n].ip + 2) & 0xFF;
+         
+         VM[n].ip = ((VM[n].prog_mem[VM[n].ip] << 8) + (VM[n].prog_mem[VM[n].ip + 1]));
+         break;
+
+       case 43:
+         // ret ||||| pop top two values from stack and jump to address
+         VM[n].ip = (VM[n].stack[VM[n].sp - 1] << 8) + VM[n].stack[VM[n].sp];
+         VM[n].sp --;
+         VM[n].sp --;
+         break;
+         
+       default:
+         Serial.print("\n ERROR: OPCODE ");
+         Serial.print(VM[n].prog_mem[VM[n].ip]);
+         Serial.println(" not found!");
+         Serial.println(" All VMs aborted");
+         debug(n);
+         while(1);
      }
  }
