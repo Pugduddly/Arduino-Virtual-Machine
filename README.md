@@ -1,7 +1,7 @@
 Arduino-Virtual-Machine
 =======================
 
-A parallel Virtual Stack Machine Firmware for Arduino
+A parallel Virtual Stack Machine for Arduino-like microcontrollers
 
 ### Instruction set (mostly taken from comments in the firmware source code)
 | Opcode | Opcode (hex) | Mnemonic | Description                                                            |
